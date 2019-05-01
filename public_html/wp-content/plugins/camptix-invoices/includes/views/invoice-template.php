@@ -196,9 +196,7 @@ defined('WPINC') || die();
 			<?php endif; // VAT field ?>
 
 			<tr>
-				<td class="text-right"><?php esc_html_e( 'TOTAL', 'wordcamporg' ); ?></td>
-				<td></td>
-				<td></td>
+				<td class="text-right" colspan="3"><?php esc_html_e( 'TOTAL', 'wordcamporg' ); ?></td>
 				<td class="text-right">
 					<?php echo esc_html( CampTix_Addon_Invoices::format_currency( $invoice_order['total'], $camptix_opts['currency'] ) ); ?>
 				</td>
