@@ -100,6 +100,19 @@ class CampTix_Addon_Invoices extends \CampTix_Addon {
 		);
 
 		add_settings_field(
+			'invoice-header-text',
+			__( 'Header Text', 'wordcamporg' ),
+			array( __CLASS__, 'header_text_callback' ),
+			'camptix_options',
+			'invoice',
+			array(
+				'id'    => 'invoice-header-text',
+				'value' => ! empty( $opt['invoice-header-text'] ) ? $opt['invoice-header-text'] : '',
+				'description' => __( 'Add a header field prior to the Logo', 'wordcamporg' )
+			)
+		);
+
+		add_settings_field(
 			'invoice-logo',
 			__( 'Logo', 'wordcamporg' ),
 			array( __CLASS__, 'type_file_callback' ),
@@ -158,6 +171,20 @@ class CampTix_Addon_Invoices extends \CampTix_Addon {
 	}
 
 	/**
+	 * Header Text callback.
+	 *
+	 * @param object $args Arguments.
+	 */
+	public static function header_text_callback( $args ) {
+		?>
+		<input type="text" name="<?php echo esc_attr( $args['id'] ); ?>" value="<?php echo esc_attr( $args['value'] ); ?>" class="regular-text" />
+		<?php if ( isset( $args['description'] ) ) : ?>
+		<p class="description"><?php echo wp_kses_data( $args['description'] ); ?></p>
+		<?php endif; ?>
+		<?php
+	}
+
+	/**
 	 * Validate our custom options.
 	 *
 	 * @param object $output Output options.
@@ -176,6 +203,11 @@ class CampTix_Addon_Invoices extends \CampTix_Addon {
 		if ( isset( $input['invoice-vat-number'] ) ) {
 			$output['invoice-vat-number'] = (int) $input['invoice-vat-number'];
 		}//end if
+
+		if ( isset( $input['invoice-header-text'] ) ) {
+			$output['invoice-header-text'] = sanitize_text_field( $input['invoice-header-text'] );
+		}
+
 		if ( isset( $input['invoice-logo'] ) ) {
 			$output['invoice-logo'] = (int) $input['invoice-logo'];
 		}//end if
@@ -380,6 +412,11 @@ class CampTix_Addon_Invoices extends \CampTix_Addon {
 		$invoice_date   = get_the_date( $camptix_opts['invoice-date-format'], $invoice_id );
 		$invoice_metas  = get_post_meta( $invoice_id, 'invoice_metas', true );
 		$invoice_order  = get_post_meta( $invoice_id, 'original_order', true );
+
+		$header_text = false;
+		if ( ! empty( $camptix_opts['invoice-header-text'] ) ) {
+			$header_text = $camptix_opts['invoice-header-text'];
+		}
 
 		$logo = CTX_INV_DIR . '/admin/images/wp-community-support.png';
 		if ( ! empty( $camptix_opts['invoice-logo'] ) ) {

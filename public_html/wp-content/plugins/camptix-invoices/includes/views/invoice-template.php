@@ -124,6 +124,11 @@ defined('WPINC') || die();
 </head>
 <body>
 <div id="camptix-invoice-page">
+	<?php if ( ! empty( $header_text ) ): ?>
+		<div class="camptix-invoice-header-text">
+			<h1><?php echo esc_html( $header_text ); ?></h1>
+		</div>
+	<?php endif ?>
 	<div class="camptix-invoice-logo-holder">
 		<img src="<?php echo esc_url($logo); ?>">
 	</div>
