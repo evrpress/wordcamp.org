@@ -3,6 +3,20 @@ body {
   background: #ccc;
   font-family: 'Open Sans', Helvetica, sans-serif; }
 
+/* TODO Move to SCSS */
+.previews {
+	position: fixed;
+	bottom: 1em;
+	left: 1em;
+	right: 1em;
+}
+.previews video {
+	max-height: 8em;
+	max-width: 8em;
+	width: 8em;
+	float: right;
+}
+
 .overlay {
   display: none;
   position: absolute;

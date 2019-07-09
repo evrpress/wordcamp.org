@@ -266,6 +266,8 @@ jQuery(document).ready(function($){
 		className: 'attendee-search-view',
 		template: wp.template( 'attendee-search' ),
 
+		scanners: [],
+
 		events: {
 			'input input':  'search',
 			'keyup input':  'search',
@@ -285,7 +287,80 @@ jQuery(document).ready(function($){
 		 */
 		render: function() {
 			this.$el.html( this.template() );
+
+			this.startQRScanning( this );
+
 			return this;
+		},
+
+		startQRScanning: function( self ) {
+			Instascan.Camera.getCameras().then(function( cameras ) {
+				if ( cameras.length > 0 ) {
+					for ( var id in cameras ) {
+						self.$el.find('.previews').append( '<video id="preview-' + id + '"></video>' );
+
+						self.scanners[id] = new Instascan.Scanner({
+							video: document.getElementById( 'preview-' + id ),
+							continuous: true, // Scan views for QR codes
+							captureImage: false, // We don't need a copy of the image
+							backgroundScan: false, // Don't scan while not focused
+							refractoryPeriod: 1000, // 1s between duplicate scans
+							mirror: false, // Don't mirror it, it looks weird.
+
+							scanPeriod: cameras.length, // More cameras? Scan less frames
+						});
+
+						self.scanners[id].addListener( 'scan', function( content ) {
+							self.QRScanEvent( content, id );
+						} );
+
+						self.scanners[id].start( cameras[id] );
+
+						// Immediately scan incase it's within view.
+						var res = self.scanners[id].scan();
+						if ( res ) {
+							self.QRScanEvent( res.content, id );
+						}
+					}
+				} else {
+					console.error( 'No cameras found.' );
+				}
+			}).catch(function (e) {
+				console.error(e);
+			});
+		},
+
+		stopQRScanning: function() {
+			var self = this;
+			for ( var id in this.scanners ) {
+				this.scanners[id].stop().then(function() {
+					delete self.scanners[id];
+				} );
+			}
+		},
+
+		QRScanEvent: function( content, id ) {
+			console.log( "QR Scan: " + content );
+
+			// Example used a slash to split First/Last
+			content = content.replace( '/', ' ' );
+
+			var input = this.$el.find( 'input' );
+
+			if ( input.val() != content ) {
+				input.val( content );
+				this.controller.trigger( 'search', content );
+			}
+
+			// Not working.. might help the lockups?
+			/*
+			for ( var camera_id in this.scanners ) {
+				if ( id != camera_id && this.scanners[camera_id] ) {
+					this.scanners[camera_id].stop().then( function() {
+						$( 'video#preview-' + id ).remove();
+					} );
+				}
+			}*/
 		},
 
 		/**
@@ -305,6 +380,7 @@ jQuery(document).ready(function($){
 		 */
 		close: function() {
 			this.controller.trigger( 'search', '' );
+			this.stopQRScanning();
 			this.remove();
 		}
 	});

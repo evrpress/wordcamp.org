@@ -89,6 +89,7 @@ $camptix_options = $camptix->get_options();
 		<div class="wrapper">
 			<input type="text" autocomplete="off" placeholder="Search" />
 		</div>
+		<div class="previews"></div>
 	</script>
 
 	<script id="tmpl-attendee-filter" type="text/template">
