@@ -49,8 +49,7 @@ class CampTix_Attendance extends CampTix_Addon {
 	public function setup_attendance_ui( $template ) {
 		global $camptix;
 
-		wp_enqueue_script( 'instascan', 'https://rawgit.com/schmich/instascan-builds/master/instascan.min.js', array(), false );
-
+		wp_enqueue_script( 'instascan', plugins_url( '/assets/instascan.min.js', __FILE__ ), array(), false );
 		wp_enqueue_script( 'jquery-fastbutton', plugins_url( '/assets/jquery.fastbutton.js', __FILE__ ), array( 'jquery' ) );
 		wp_enqueue_script( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.js' , __FILE__ ), array( 'backbone', 'jquery', 'wp-util', 'jquery-fastbutton', 'instascan' ), filemtime( __DIR__ . '/assets/attendance-ui.js' ) );
 		wp_enqueue_style( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.css', __FILE__ ), array( 'dashicons' ), filemtime( __DIR__ . '/assets/attendance-ui.css' ) );
