@@ -266,14 +266,15 @@ jQuery(document).ready(function($){
 		className: 'attendee-search-view',
 		template: wp.template( 'attendee-search' ),
 
-		scanners: [],
+		scanner: false,
 
 		events: {
 			'input input':  'search',
 			'keyup input':  'search',
 			'change input': 'search',
 			'search input': 'search',
-			'fastClick .close': 'close'
+			'fastClick .close': 'close',
+			'fastClick video': 'incrementCamera',
 		},
 
 		initialize: function( options ) {
@@ -294,33 +295,46 @@ jQuery(document).ready(function($){
 		},
 
 		startQRScanning: function( self ) {
+			self.$el.find('.previews video').remove();
+
+			// Abort.
+			if ( 'disabled' === window.localStorage.getItem( "CameraID" ) ) {
+				return;
+			}
+
 			Instascan.Camera.getCameras().then(function( cameras ) {
 				if ( cameras.length > 0 ) {
-					for ( var id in cameras ) {
-						self.$el.find('.previews').append( '<video id="preview-' + id + '"></video>' );
 
-						self.scanners[id] = new Instascan.Scanner({
-							video: document.getElementById( 'preview-' + id ),
-							continuous: true, // Scan views for QR codes
-							captureImage: false, // We don't need a copy of the image
-							backgroundScan: false, // Don't scan while not focused
-							refractoryPeriod: 1000, // 1s between duplicate scans
-							mirror: false, // Don't mirror it, it looks weird.
+					// Does this person have a saved camera?
+					var id = window.localStorage.getItem( "CameraID" );
+					if ( ! id || id >= cameras.length ) {
+						id = 0;
+						window.localStorage.setItem( 'CameraID', id );
+					}
 
-							scanPeriod: cameras.length, // More cameras? Scan less frames
-						});
+					self.$el.find('.previews').append( '<video id="preview-' + id + '"></video>' );
 
-						self.scanners[id].addListener( 'scan', function( content ) {
-							self.QRScanEvent( content, id );
-						} );
+					self.scanner = new Instascan.Scanner({
+						video: document.getElementById( 'preview-' + id ),
+						continuous: true, // Scan views for QR codes
+						captureImage: false, // We don't need a copy of the image
+						backgroundScan: true, // Don't scan while not focused
+						refractoryPeriod: 1000, // 1s between duplicate scans
+						mirror: false, // Don't mirror it, it looks weird.
 
-						self.scanners[id].start( cameras[id] );
+						scanPeriod: cameras.length, // More cameras? Scan less frames
+					});
 
-						// Immediately scan incase it's within view.
-						var res = self.scanners[id].scan();
-						if ( res ) {
-							self.QRScanEvent( res.content, id );
-						}
+					self.scanner.addListener( 'scan', function( content ) {
+						self.QRScanEvent( content );
+					} );
+
+					self.scanner.start( cameras[id] );
+
+					// Immediately scan incase it's within view.
+					var res = self.scanner.scan();
+					if ( res ) {
+						self.QRScanEvent( res.content );
 					}
 				} else {
 					console.error( 'No cameras found.' );
@@ -330,16 +344,26 @@ jQuery(document).ready(function($){
 			});
 		},
 
+		incrementCamera: function() {
+			var self = this,
+				id = window.localStorage.getItem( "CameraID" );
+
+			id++;
+
+			window.localStorage.setItem( 'CameraID', id );
+
+			this.scanner.stop().then(function() {
+				self.startQRScanning( self );
+			})
+		},
+
 		stopQRScanning: function() {
-			var self = this;
-			for ( var id in this.scanners ) {
-				this.scanners[id].stop().then(function() {
-					delete self.scanners[id];
-				} );
+			if ( this.scanner ) {
+				this.scanner.stop();
 			}
 		},
 
-		QRScanEvent: function( content, id ) {
+		QRScanEvent: function( content ) {
 			console.log( "QR Scan: " + content );
 
 			// Example used a slash to split First/Last
@@ -349,18 +373,8 @@ jQuery(document).ready(function($){
 
 			if ( input.val() != content ) {
 				input.val( content );
-				this.controller.trigger( 'search', content );
+				this.controller.trigger( 'search', content, true );
 			}
-
-			// Not working.. might help the lockups?
-			/*
-			for ( var camera_id in this.scanners ) {
-				if ( id != camera_id && this.scanners[camera_id] ) {
-					this.scanners[camera_id].stop().then( function() {
-						$( 'video#preview-' + id ).remove();
-					} );
-				}
-			}*/
 		},
 
 		/**
@@ -476,7 +490,8 @@ jQuery(document).ready(function($){
 			'fastClick header h1': 'searchView',
 			'fastClick .submenu .sort': 'sortView',
 			'fastClick .submenu .refresh': 'refresh',
-			'fastClick .submenu .filter': 'filterView'
+			'fastClick .submenu .filter': 'filterView',
+			'fastClick .submenu .togglecamera': 'toggleCamera'
 		},
 
 		/**
@@ -487,6 +502,7 @@ jQuery(document).ready(function($){
 			this.query = {};
 			this.requests = [];
 			this.lastScroll = 0;
+			this.show_single_attendee = false;
 
 			this.filterSettings = {
 				'attendance': 'none',
@@ -553,6 +569,7 @@ jQuery(document).ready(function($){
 			this.collection = collection;
 			this.collection.on( 'add', this.add, this );
 			this.collection.on( 'reset', this.reset, this );
+			this.collection.on( 'sync', this.sync_show_single, this );
 
 			// Clear the list before adding things back.
 			this.$list.find( 'li.item' ).remove();
@@ -564,6 +581,20 @@ jQuery(document).ready(function($){
 			}
 
 			this.trigger( 'more:toggle', collection.hasMore() );
+		},
+
+		// TODO: This only happens on uncached loads. Should be okay.
+		sync_show_single: function( self, collection ) {
+			if ( ! this.show_single_attendee ) {
+				return;
+			}
+			this.show_single_attendee = false; // Don't do it again on this request!
+
+			var lies = this.$list.find('li.item');
+
+			if ( lies.length == 1 ) {
+				lies.get(0).click();
+			}
 		},
 
 		/**
@@ -591,6 +622,11 @@ jQuery(document).ready(function($){
 		render: function() {
 			this.$el.html( this.template() );
 			$(document.body).append( this.el );
+
+			if ( this.show_single_attendee ) {
+				debugger;
+			}
+
 			return this;
 		},
 
@@ -639,6 +675,22 @@ jQuery(document).ready(function($){
 		},
 
 		/**
+		 * Enable/Disable the camera.
+		 */
+		toggleCamera: function() {
+			this.$menu.removeClass( 'dropdown' );
+
+			var id = window.localStorage.getItem( "CameraID" );
+			if ( 'disabled' == id ) {
+				window.localStorage.setItem( "CameraID", 0 );
+			} else {
+				window.localStorage.setItem( "CameraID", 'disabled' );
+			}
+
+			return false;
+		},
+
+		/**
 		 * Remove everything from the list, flush all caches
 		 * and setup a new collection with the current settings.
 		 */
@@ -653,7 +705,8 @@ jQuery(document).ready(function($){
 		/**
 		 * Re-initialize a calloction with a search term.
 		 */
-		search: function( keyword ) {
+		search: function( keyword, show_single_attendee ) {
+			this.show_single_attendee = !! show_single_attendee
 			this.keyword = this.keyword || '';
 			if ( keyword == this.keyword )
 				return;
