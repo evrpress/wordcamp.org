@@ -318,7 +318,7 @@ jQuery(document).ready(function($){
 						video: document.getElementById( 'preview-' + id ),
 						continuous: true, // Scan views for QR codes
 						captureImage: false, // We don't need a copy of the image
-						backgroundScan: true, // Don't scan while not focused
+						backgroundScan: false, // Don't scan while not focused
 						refractoryPeriod: 1000, // 1s between duplicate scans
 						mirror: false, // Don't mirror it, it looks weird.
 
