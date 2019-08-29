@@ -298,10 +298,7 @@ jQuery(document).ready(function($){
 
 		startQR: function( self ) {
 			// Abort if disabled or not loaded.
-			if (
-				! _camptixAttendanceQRScanning ||
-				typeof QrScanner === 'undefined'
-			) {
+			if ( ! _camptixAttendanceQRScanning || typeof QrScanner === 'undefined' ) {
 				return;
 			}
 
