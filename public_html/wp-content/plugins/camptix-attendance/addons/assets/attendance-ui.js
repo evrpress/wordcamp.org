@@ -533,7 +533,8 @@ jQuery(document).ready(function($){
 			this.collection = collection;
 			this.collection.on( 'add', this.add, this );
 			this.collection.on( 'reset', this.reset, this );
-			this.collection.on( 'sync', this.sync_show_single, this );
+			this.collection.on( 'sync', this.show_single_attendee_result, this );
+			this.collection.on( 'reset', this.show_single_attendee_result, this );
 
 			// Clear the list before adding things back.
 			this.$list.find( 'li.item' ).remove();
@@ -547,8 +548,7 @@ jQuery(document).ready(function($){
 			this.trigger( 'more:toggle', collection.hasMore() );
 		},
 
-		// TODO: This only happens on uncached loads. Should be okay.
-		sync_show_single: function( self, collection ) {
+		show_single_attendee_result: function( self, collection ) {
 			if ( ! this.show_single_attendee ) {
 				return;
 			}
