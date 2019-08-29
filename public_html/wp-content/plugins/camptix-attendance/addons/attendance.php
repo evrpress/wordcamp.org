@@ -49,9 +49,27 @@ class CampTix_Attendance extends CampTix_Addon {
 	public function setup_attendance_ui( $template ) {
 		global $camptix;
 
-		wp_enqueue_script( 'instascan', plugins_url( '/assets/instascan.min.js', __FILE__ ), array(), false );
+		// Try https://github.com/nimiq/qr-scanner
+		wp_enqueue_script( 'nimiq-qr-scanner', plugins_url( '/assets/qr-scanner.min.js', __FILE__ ), array(), false );
+		// This is a ES6 module, import it as such.
+		add_filter( 'script_loader_tag', function( $tag, $handle, $src ) {
+			if ( 'nimiq-qr-scanner' == $handle ) {
+				$worker_src = plugins_url( '/assets/qr-scanner-worker.min.js', __FILE__ );
+				// Since this is an ES6 module a direct import doesn't work too well.. :)s
+				$tag = '<script type="module" id="nimiq-qr-scanner">' .
+					// Import the Module
+					'import QrScanner from ' . json_encode( $src ) . ";\n" .
+					// Set the required Worker Path.
+					'QrScanner.WORKER_PATH = ' . json_encode( $worker_src ) . ";\n" .
+					// Load the module refernece into Global scope.s
+					'window.QrScanner = QrScanner' . ";\n" .
+					'</script>';
+			}
+			return $tag;
+		}, 10, 3 );
+
 		wp_enqueue_script( 'jquery-fastbutton', plugins_url( '/assets/jquery.fastbutton.js', __FILE__ ), array( 'jquery' ) );
-		wp_enqueue_script( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.js' , __FILE__ ), array( 'backbone', 'jquery', 'wp-util', 'jquery-fastbutton', 'instascan' ), filemtime( __DIR__ . '/assets/attendance-ui.js' ) );
+		wp_enqueue_script( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.js' , __FILE__ ), array( 'backbone', 'jquery', 'wp-util', 'jquery-fastbutton', 'nimiq-qr-scanner' ), filemtime( __DIR__ . '/assets/attendance-ui.js' ) );
 		wp_enqueue_style( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.css', __FILE__ ), array( 'dashicons' ), filemtime( __DIR__ . '/assets/attendance-ui.css' ) );
 
 		$camptix->tmp( 'attendance_tickets', $this->get_tickets() );

@@ -273,8 +273,9 @@ jQuery(document).ready(function($){
 			'keyup input':  'search',
 			'change input': 'search',
 			'search input': 'search',
+			'blur input': 'pauseQR',
+			'focus input': 'resumeQR',
 			'fastClick .close': 'close',
-			'fastClick video': 'incrementCamera',
 		},
 
 		initialize: function( options ) {
@@ -294,72 +295,60 @@ jQuery(document).ready(function($){
 			return this;
 		},
 
+		pauseQR: function() {
+			if ( this.scanner ) {
+				this.scanner.pause();
+			}
+		},
+
+		resumeQR: function() {
+			if ( this.scanner ) {
+				this.scanner.start();
+			}
+		},
+
 		startQRScanning: function( self ) {
 			self.$el.find('.previews video').remove();
 
-			// Abort.
-			if ( 'disabled' === window.localStorage.getItem( "CameraID" ) ) {
+			// Abort if disabled.
+			if ( 'disabled' === window.localStorage.getItem( 'QRScanner' ) ) {
 				return;
 			}
 
-			Instascan.Camera.getCameras().then(function( cameras ) {
-				if ( cameras.length > 0 ) {
+			// Abort if library not loaded.
+			if ( typeof QrScanner === 'undefined'  ) {
+				return;
+			}
 
-					// Does this person have a saved camera?
-					var id = window.localStorage.getItem( "CameraID" );
-					if ( ! id || id >= cameras.length ) {
-						id = 0;
-						window.localStorage.setItem( 'CameraID', id );
-					}
-
-					self.$el.find('.previews').append( '<video id="preview-' + id + '"></video>' );
-
-					self.scanner = new Instascan.Scanner({
-						video: document.getElementById( 'preview-' + id ),
-						continuous: true, // Scan views for QR codes
-						captureImage: false, // We don't need a copy of the image
-						backgroundScan: false, // Don't scan while not focused
-						refractoryPeriod: 1000, // 1s between duplicate scans
-						mirror: false, // Don't mirror it, it looks weird.
-
-						scanPeriod: cameras.length, // More cameras? Scan less frames
-					});
-
-					self.scanner.addListener( 'scan', function( content ) {
-						self.QRScanEvent( content );
-					} );
-
-					self.scanner.start( cameras[id] );
-
-					// Immediately scan incase it's within view.
-					var res = self.scanner.scan();
-					if ( res ) {
-						self.QRScanEvent( res.content );
-					}
-				} else {
-					console.error( 'No cameras found.' );
+			QrScanner.hasCamera().then( function() {
+				if ( ! self.$el.find('.previews video').length ) {
+					self.$el.find('.previews').append( '<video id="qr-preview" muted playsinline></video>' );
 				}
-			}).catch(function (e) {
-				console.error(e);
+
+				// Add a limit on the scan results, we don't want to keep searching.s
+				var lastScanResult = false,
+					lastScanTime = 0;
+
+				self.scanner = new QrScanner(
+					document.getElementById('qr-preview'),
+					function( scan ) {
+						// Only fire if the QR code has changed, or it's been at least 2.5s
+						if ( lastScanResult !== scan || (new Date()).getTime() > lastScanTime + 2500 ) {
+							lastScanTime = (new Date()).getTime();
+							lastScanResult = scan;
+
+							self.QRScanEvent( scan );
+						}
+					}
+				);
+
+				self.scanner.start();
 			});
-		},
-
-		incrementCamera: function() {
-			var self = this,
-				id = window.localStorage.getItem( "CameraID" );
-
-			id++;
-
-			window.localStorage.setItem( 'CameraID', id );
-
-			this.scanner.stop().then(function() {
-				self.startQRScanning( self );
-			})
 		},
 
 		stopQRScanning: function() {
 			if ( this.scanner ) {
-				this.scanner.stop();
+				this.scanner.destroy();
 			}
 		},
 
@@ -593,7 +582,11 @@ jQuery(document).ready(function($){
 			var lies = this.$list.find('li.item');
 
 			if ( lies.length == 1 ) {
+				// Enter the single attendee that was found.
 				lies.get(0).click();
+
+				// Since we're moving away from the search area, unfocus the search area to hide the keyboard and pause QR scanning
+				this.$header.find( 'input:focus' ).blur();
 			}
 		},
 
@@ -676,11 +669,11 @@ jQuery(document).ready(function($){
 		toggleCamera: function() {
 			this.$menu.removeClass( 'dropdown' );
 
-			var id = window.localStorage.getItem( "CameraID" );
+			var id = window.localStorage.getItem( 'QRScanner' );
 			if ( 'disabled' == id ) {
-				window.localStorage.setItem( "CameraID", 0 );
+				window.localStorage.removeItem( 'QRScanner' );
 			} else {
-				window.localStorage.setItem( "CameraID", 'disabled' );
+				window.localStorage.setItem( 'QRScanner', 'disabled' );
 			}
 
 			return false;
