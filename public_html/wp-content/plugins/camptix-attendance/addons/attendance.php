@@ -50,7 +50,8 @@ class CampTix_Attendance extends CampTix_Addon {
 		global $camptix;
 
 		// Try https://github.com/nimiq/qr-scanner
-		wp_enqueue_script( 'nimiq-qr-scanner', plugins_url( '/assets/qr-scanner.min.js', __FILE__ ), array(), false );
+		wp_register_script( 'nimiq-qr-scanner', plugins_url( '/assets/qr-scanner.min.js', __FILE__ ), array(), false );
+
 		// This is a ES6 module, import it as such.
 		add_filter( 'script_loader_tag', function( $tag, $handle, $src ) {
 			if ( 'nimiq-qr-scanner' == $handle ) {
@@ -61,7 +62,7 @@ class CampTix_Attendance extends CampTix_Addon {
 					'import QrScanner from ' . json_encode( $src ) . ";\n" .
 					// Set the required Worker Path.
 					'QrScanner.WORKER_PATH = ' . json_encode( $worker_src ) . ";\n" .
-					// Load the module refernece into Global scope.s
+					// Load the module refernece into Global scope.
 					'window.QrScanner = QrScanner' . ";\n" .
 					'</script>';
 			}
