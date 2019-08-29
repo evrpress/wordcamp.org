@@ -251,20 +251,36 @@ class CampTix_Attendance extends CampTix_Addon {
 		add_filter( 'posts_clauses', function( $clauses ) use ( $search ) {
 			global $wpdb;
 
-			$search = $wpdb->esc_like( wp_unslash( $search ) );
+			$search = $wpdb->esc_like( trim( wp_unslash( $search ) ) );
 
 			$clauses['join'] .= "
 				INNER JOIN $wpdb->postmeta tix_first_name ON ( ID = tix_first_name.post_id AND tix_first_name.meta_key = 'tix_first_name' )
 				INNER JOIN $wpdb->postmeta tix_last_name ON ( ID = tix_last_name.post_id AND tix_last_name.meta_key = 'tix_last_name' )
 			";
 
-			$clauses['where'] .= $wpdb->prepare( "
-				AND (
+			$where = $wpdb->prepare( "
+				(
 					tix_first_name.meta_value LIKE '%%%s%%' OR
 					tix_last_name.meta_value LIKE '%%%s%%' OR
 					CONCAT( tix_first_name.meta_value, ' ', tix_last_name.meta_value ) LIKE '%%%s%%'
 				)
 			", $search, $search, $search );
+
+			// Match against the Access Token, specifically the second half of the hash, if it looks like one.
+			if ( preg_match( '!^[0-9a-f]{16}$!i', $search ) ) {
+				$clauses['join'] .= "
+					INNER JOIN $wpdb->postmeta tix_access_token ON ( ID = tix_access_token.post_id AND tix_access_token.meta_key = 'tix_access_token' )
+				";
+
+				$where = '(' .
+						$where .
+						' OR (' .
+						$wpdb->prepare( "tix_access_token.meta_value LIKE '%%%s'", $search ) .
+						')' .
+					')';
+			}
+
+			$clauses['where'] .= ' AND ' . $where;
 
 			return $clauses;
 		} );
