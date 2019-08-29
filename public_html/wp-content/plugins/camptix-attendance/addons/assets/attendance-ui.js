@@ -314,7 +314,6 @@ jQuery(document).ready(function($){
 			// Abort if disabled or not loaded.
 			if (
 				! _camptixAttendanceQRScanning ||
-				'disabled' === window.localStorage.getItem( 'QRScanner' ) ||
 				typeof QrScanner === 'undefined'
 			) {
 				return;
@@ -473,7 +472,6 @@ jQuery(document).ready(function($){
 			'fastClick .submenu .sort': 'sortView',
 			'fastClick .submenu .refresh': 'refresh',
 			'fastClick .submenu .filter': 'filterView',
-			'fastClick .submenu .togglecamera': 'toggleCamera'
 		},
 
 		/**
@@ -653,22 +651,6 @@ jQuery(document).ready(function($){
 			this.$menu.removeClass( 'dropdown' );
 			this.filterView = new camptix.views.AttendeeFilterView({ controller: this, filterSettings: this.filterSettings });
 			this.$el.append( this.filterView.render().el );
-			return false;
-		},
-
-		/**
-		 * Enable/Disable the camera.
-		 */
-		toggleCamera: function() {
-			this.$menu.removeClass( 'dropdown' );
-
-			var id = window.localStorage.getItem( 'QRScanner' );
-			if ( 'disabled' == id ) {
-				window.localStorage.removeItem( 'QRScanner' );
-			} else {
-				window.localStorage.setItem( 'QRScanner', 'disabled' );
-			}
-
 			return false;
 		},
 

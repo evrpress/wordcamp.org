@@ -69,7 +69,6 @@ $camptix_options = $camptix->get_options();
 				<div class="submenu">
 					<a href="#" class="search">Search</a>
 					<a href="#" class="filter">Sort & Filter</a>
-					<a href="#" class="togglecamera">Toggle QR scanning</a>
 					<a href="#" class="refresh">Refresh</a>
 				</div>
 			</div>
