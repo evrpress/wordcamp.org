@@ -276,7 +276,7 @@ jQuery(document).ready(function($){
 			'search input': 'search',
 			'blur input': 'pauseQR',
 			'focus input': 'resumeQR',
-			'fastClick .close': 'close',
+			'fastClick .close': 'close'
 		},
 
 		initialize: function( options ) {
@@ -464,7 +464,7 @@ jQuery(document).ready(function($){
 			'fastClick header h1': 'searchView',
 			'fastClick .submenu .sort': 'sortView',
 			'fastClick .submenu .refresh': 'refresh',
-			'fastClick .submenu .filter': 'filterView',
+			'fastClick .submenu .filter': 'filterView'
 		},
 
 		/**
@@ -599,7 +599,6 @@ jQuery(document).ready(function($){
 		render: function() {
 			this.$el.html( this.template() );
 			$(document.body).append( this.el );
-
 			return this;
 		},
 

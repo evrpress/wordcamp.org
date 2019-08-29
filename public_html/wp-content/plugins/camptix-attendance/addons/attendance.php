@@ -270,7 +270,7 @@ class CampTix_Attendance extends CampTix_Addon {
 		add_filter( 'posts_clauses', function( $clauses ) use ( $search ) {
 			global $wpdb;
 
-			$search = $wpdb->esc_like( trim( wp_unslash( $search ) ) );
+			$search = $wpdb->esc_like( wp_unslash( $search ) );
 
 			$clauses['join'] .= "
 				INNER JOIN $wpdb->postmeta tix_first_name ON ( ID = tix_first_name.post_id AND tix_first_name.meta_key = 'tix_first_name' )
@@ -430,8 +430,9 @@ class CampTix_Attendance extends CampTix_Addon {
 		if ( isset( $input['attendance-enabled'] ) )
 			$output['attendance-enabled'] = (bool) $input['attendance-enabled'];
 
-		if ( isset( $input['attendance-qr-enabled'] ) )
+		if ( isset( $input['attendance-qr-enabled'] ) ) {
 			$output['attendance-qr-enabled'] = (bool) $input['attendance-qr-enabled'];
+		}
 
 		if ( ! empty( $input['attendance-generate'] ) )
 			$output['attendance-secret'] = wp_generate_password( 32, false, false );
