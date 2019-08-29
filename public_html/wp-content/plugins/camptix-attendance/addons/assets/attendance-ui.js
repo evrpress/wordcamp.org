@@ -466,7 +466,7 @@ jQuery(document).ready(function($){
 			this.query = {};
 			this.requests = [];
 			this.lastScroll = 0;
-			this.show_single_attendee = false;
+			this.show_single = false;
 
 			this.filterSettings = {
 				'attendance': 'none',
@@ -533,8 +533,8 @@ jQuery(document).ready(function($){
 			this.collection = collection;
 			this.collection.on( 'add', this.add, this );
 			this.collection.on( 'reset', this.reset, this );
-			this.collection.on( 'sync', this.show_single_attendee_result, this );
-			this.collection.on( 'reset', this.show_single_attendee_result, this );
+			this.collection.on( 'sync', this.show_single_result, this );
+			this.collection.on( 'reset', this.show_single_result, this );
 
 			// Clear the list before adding things back.
 			this.$list.find( 'li.item' ).remove();
@@ -548,19 +548,20 @@ jQuery(document).ready(function($){
 			this.trigger( 'more:toggle', collection.hasMore() );
 		},
 
-		show_single_attendee_result: function( self, collection ) {
-			if ( ! this.show_single_attendee ) {
+		show_single_result: function( self, collection ) {
+			if ( ! this.show_single ) {
 				return;
 			}
-			this.show_single_attendee = false; // Don't do it again on this request!
+			// Reset, we don't want this triggering again on this search.
+			this.show_single = false;
 
 			var lies = this.$list.find('li.item');
 
 			if ( lies.length == 1 ) {
-				// Enter the single attendee that was found.
+				// Pull up the single attendee that was found.
 				lies.get(0).click();
 
-				// Since we're moving away from the search area, unfocus the search input to hide the keyboard and pause QR scanning
+				// Defocus the search bar if still selected to stop QR scanning and hide keyboard.
 				this.$header.find( 'input:focus' ).blur();
 			}
 		},
@@ -652,8 +653,8 @@ jQuery(document).ready(function($){
 		/**
 		 * Re-initialize a calloction with a search term.
 		 */
-		search: function( keyword, show_single_attendee ) {
-			this.show_single_attendee = !! show_single_attendee
+		search: function( keyword, show_single ) {
+			this.show_single = !! show_single;
 			this.keyword = this.keyword || '';
 			if ( keyword == this.keyword )
 				return;
