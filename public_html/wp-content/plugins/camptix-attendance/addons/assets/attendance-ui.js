@@ -560,7 +560,7 @@ jQuery(document).ready(function($){
 				// Enter the single attendee that was found.
 				lies.get(0).click();
 
-				// Since we're moving away from the search area, unfocus the search area to hide the keyboard and pause QR scanning
+				// Since we're moving away from the search area, unfocus the search input to hide the keyboard and pause QR scanning
 				this.$header.find( 'input:focus' ).blur();
 			}
 		},
