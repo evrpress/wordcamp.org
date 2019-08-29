@@ -623,10 +623,6 @@ jQuery(document).ready(function($){
 			this.$el.html( this.template() );
 			$(document.body).append( this.el );
 
-			if ( this.show_single_attendee ) {
-				debugger;
-			}
-
 			return this;
 		},
 
