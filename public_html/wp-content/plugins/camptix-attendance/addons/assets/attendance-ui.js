@@ -267,7 +267,6 @@ jQuery(document).ready(function($){
 		template: wp.template( 'attendee-search' ),
 
 		scanner: false,
-		lastScanResult: false,
 
 		events: {
 			'input input':  'search',
@@ -335,11 +334,6 @@ jQuery(document).ready(function($){
 		},
 
 		QRScanEvent: function( content ) {
-			if ( content === this.lastScanResult ) {
-				return;
-			}
-			this.lastScanResult = content;
-
 			var input = this.$el.find( 'input' );
 
 			if ( input.val() != content ) {
