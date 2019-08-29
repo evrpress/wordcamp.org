@@ -361,6 +361,10 @@ class CampTix_Attendance extends CampTix_Addon {
 			esc_html__( "Don't forget to disable the UI after the event is over.", 'wordcamporg' )
 		);
 
+		$camptix->add_settings_field_helper( 'attendance-qr-enabled', esc_html__( 'QR Code Scanning', 'wordcamporg' ), 'field_yesno', 'general',
+			esc_html__( "Enable QR code scanning?", 'wordcamporg' )
+		);
+
 		add_settings_field( 'attendance-questions', esc_html__( 'Questions', 'wordcamporg' ), array( $this, 'field_questions' ), 'camptix_options', 'general', esc_html__( 'Show these additional ticket questions in the UI.', 'wordcamporg' ) );
 
 		add_settings_field( 'attendance-secret', esc_html__( 'Secret Link', 'wordcamporg' ), array( $this, 'field_secret' ), 'camptix_options', 'general' );
@@ -425,6 +429,9 @@ class CampTix_Attendance extends CampTix_Addon {
 	public function validate_options( $output, $input ) {
 		if ( isset( $input['attendance-enabled'] ) )
 			$output['attendance-enabled'] = (bool) $input['attendance-enabled'];
+
+		if ( isset( $input['attendance-qr-enabled'] ) )
+			$output['attendance-qr-enabled'] = (bool) $input['attendance-qr-enabled'];
 
 		if ( ! empty( $input['attendance-generate'] ) )
 			$output['attendance-secret'] = wp_generate_password( 32, false, false );

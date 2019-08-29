@@ -311,13 +311,12 @@ jQuery(document).ready(function($){
 		startQRScanning: function( self ) {
 			self.$el.find('.previews video').remove();
 
-			// Abort if disabled.
-			if ( 'disabled' === window.localStorage.getItem( 'QRScanner' ) ) {
-				return;
-			}
-
-			// Abort if library not loaded.
-			if ( typeof QrScanner === 'undefined'  ) {
+			// Abort if disabled or not loaded.
+			if (
+				! _camptixAttendanceQRScanning ||
+				'disabled' === window.localStorage.getItem( 'QRScanner' ) ||
+				typeof QrScanner === 'undefined'
+			) {
 				return;
 			}
 
