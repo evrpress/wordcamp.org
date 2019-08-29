@@ -291,26 +291,12 @@ jQuery(document).ready(function($){
 		render: function() {
 			this.$el.html( this.template() );
 
-			this.startQRScanning( this );
+			this.startQR( this );
 
 			return this;
 		},
 
-		pauseQR: function() {
-			if ( this.scanner ) {
-				this.scanner.pause();
-			}
-		},
-
-		resumeQR: function() {
-			if ( this.scanner ) {
-				this.scanner.start();
-			}
-		},
-
-		startQRScanning: function( self ) {
-			self.$el.find('.previews video').remove();
-
+		startQR: function( self ) {
 			// Abort if disabled or not loaded.
 			if (
 				! _camptixAttendanceQRScanning ||
@@ -333,9 +319,21 @@ jQuery(document).ready(function($){
 			});
 		},
 
-		stopQRScanning: function() {
+		stopQR: function() {
 			if ( this.scanner ) {
 				this.scanner.destroy();
+			}
+		},
+
+		pauseQR: function() {
+			if ( this.scanner ) {
+				this.scanner.pause();
+			}
+		},
+
+		resumeQR: function() {
+			if ( this.scanner ) {
+				this.scanner.start();
 			}
 		},
 
@@ -344,8 +342,6 @@ jQuery(document).ready(function($){
 				return;
 			}
 			this.lastScanResult = content;
-
-			console.log( "QR Scan: " + content );
 
 			var input = this.$el.find( 'input' );
 
@@ -372,7 +368,7 @@ jQuery(document).ready(function($){
 		 */
 		close: function() {
 			this.controller.trigger( 'search', '' );
-			this.stopQRScanning();
+			this.stopQR();
 			this.remove();
 		}
 	});
