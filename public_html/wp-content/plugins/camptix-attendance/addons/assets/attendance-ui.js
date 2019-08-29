@@ -347,9 +347,6 @@ jQuery(document).ready(function($){
 
 			console.log( "QR Scan: " + content );
 
-			// Example used a slash to split First/Last
-			content = content.replace( '/', ' ' );
-
 			var input = this.$el.find( 'input' );
 
 			if ( input.val() != content ) {
