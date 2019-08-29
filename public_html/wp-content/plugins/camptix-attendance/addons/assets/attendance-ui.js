@@ -267,6 +267,7 @@ jQuery(document).ready(function($){
 		template: wp.template( 'attendee-search' ),
 
 		scanner: false,
+		lastScanResult: false,
 
 		events: {
 			'input input':  'search',
@@ -321,24 +322,12 @@ jQuery(document).ready(function($){
 			}
 
 			QrScanner.hasCamera().then( function() {
-				if ( ! self.$el.find('.previews video').length ) {
-					self.$el.find('.previews').append( '<video id="qr-preview" muted playsinline></video>' );
-				}
-
-				// Add a limit on the scan results, we don't want to keep searching.s
-				var lastScanResult = false,
-					lastScanTime = 0;
+				self.$el.find('.previews').append( '<video id="qr-preview" muted playsinline></video>' );
 
 				self.scanner = new QrScanner(
 					document.getElementById('qr-preview'),
 					function( scan ) {
-						// Only fire if the QR code has changed, or it's been at least 2.5s
-						if ( lastScanResult !== scan || (new Date()).getTime() > lastScanTime + 2500 ) {
-							lastScanTime = (new Date()).getTime();
-							lastScanResult = scan;
-
-							self.QRScanEvent( scan );
-						}
+						return self.QRScanEvent( scan );
 					}
 				);
 
@@ -353,6 +342,11 @@ jQuery(document).ready(function($){
 		},
 
 		QRScanEvent: function( content ) {
+			if ( content === this.lastScanResult ) {
+				return;
+			}
+			this.lastScanResult = content;
+
 			console.log( "QR Scan: " + content );
 
 			// Example used a slash to split First/Last
