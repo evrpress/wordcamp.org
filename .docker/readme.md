@@ -205,7 +205,7 @@ We have separate containers for PHPUnit, a web server & database, to keep the te
     docker compose -f docker-compose.phpunit.yml exec phpunit_wp phpunit
     ```
 
-    If you're still in the shell from the previous step, you can run `phpunit` directly.
+    If you're still in the shell from the previous step, you can run `phpunit` directly. You'll need to be in the `/app` directory to run the tests.
     ```bash
     phpunit
     ```
