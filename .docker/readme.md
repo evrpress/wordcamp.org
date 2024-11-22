@@ -10,14 +10,6 @@ Follow these steps to setup a local WordCamp.org environment using [Docker](http
     cd wordcamp.test
     ```
 
-    If you get an error about "Permission denied (publickey)", you have two options:
-      - Make sure you have [a working SSH key](https://docs.github.com/en/authentication/troubleshooting-ssh/error-permission-denied-publickey#make-sure-you-have-a-key-that-is-being-used).
-      - Or use the HTTPS URL:
-          ```bash
-          git clone https://github.com/WordPress/wordcamp.org.git wordcamp.test
-          cd wordcamp.test
-          ```
-
 1. Generate and trust the SSL certificates, so you get a green bar and can adequately test service workers.
    	
     _Using zsh? You may see `zsh: no matches found: *.wordcamp.test` running the final cert command below. Try prefixing the final command with `noglob`, i.e. `noglob mkcert -cert-file ...`_
