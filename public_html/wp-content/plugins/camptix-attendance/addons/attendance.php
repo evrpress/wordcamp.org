@@ -89,8 +89,10 @@ class CampTix_Attendance extends CampTix_Addon {
 			3
 		);
 
+		wp_register_script( 'html5-qr-scanner', plugins_url( '/assets/html5-qrcode.min.js', __FILE__ ), array(), false );
+
 		wp_enqueue_script( 'jquery-fastbutton', plugins_url( '/assets/jquery.fastbutton.js', __FILE__ ), array( 'jquery' ) );
-		wp_enqueue_script( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.js', __FILE__ ), array( 'backbone', 'jquery', 'wp-util', 'jquery-fastbutton', 'nimiq-qr-scanner' ), filemtime( __DIR__ . '/assets/attendance-ui.js' ) );
+		wp_enqueue_script( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.js', __FILE__ ), array( 'backbone', 'jquery', 'wp-util', 'jquery-fastbutton', 'nimiq-qr-scanner', 'html5-qr-scanner' ), filemtime( __DIR__ . '/assets/attendance-ui.js' ) );
 		wp_enqueue_style( 'camptix-attendance-ui', plugins_url( '/assets/attendance-ui.css', __FILE__ ), array( 'dashicons' ), filemtime( __DIR__ . '/assets/attendance-ui.css' ) );
 
 		$camptix->tmp( 'attendance_tickets', $this->get_tickets() );
@@ -108,12 +110,42 @@ class CampTix_Attendance extends CampTix_Addon {
 			return;
 		}
 
+		// get qr code response if requested
+		if ( isset( $_GET['qrcode'] ) ) {
+			return $this->_ajax_qrcode();
+		}
+
 		$action = $_REQUEST['camptix_action'];
 		if ( 'sync-model' == $action ) {
 			return $this->_ajax_sync_model();
 		} elseif ( 'sync-list' == $action ) {
 			return $this->_ajax_sync_list();
 		}
+	}
+
+	/**
+	 * Gets the attende object by the qrcode.
+	 */
+	public function _ajax_qrcode() {
+
+		$qrcode = esc_attr( $_GET['qrcode'] );
+
+		global $wpdb;
+
+		// get the attende ID by the qrcode
+		// this is maybe resource intensive for larger events allthough we don't had any WordCamp > 3000 tickets so I guess we're fine
+		$attendee_id = $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM `{$wpdb->prefix}postmeta` WHERE `meta_key` = 'tix_access_token' AND md5(meta_value) = %s", $qrcode ) );
+
+		if ( empty( $attendee_id ) ) {
+			return wp_send_json_error( 'user not found' );
+		}
+
+		$attendee = get_post( $attendee_id );
+
+		if ( empty( $attendee ) ) {
+			return wp_send_json_error( 'user not found' );
+		}
+		return wp_send_json_success( array( $this->_make_object( $attendee ) ) );
 	}
 
 	/**
