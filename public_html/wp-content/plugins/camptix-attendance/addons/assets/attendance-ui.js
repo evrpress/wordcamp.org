@@ -1,7 +1,6 @@
 var camptix = camptix || {};
 
-jQuery(document).ready(function($){
-
+jQuery(document).ready(function ($) {
 	camptix.models = camptix.models || {};
 	camptix.views = camptix.views || {};
 	camptix.collections = camptix.collections || {};
@@ -12,7 +11,7 @@ jQuery(document).ready(function($){
 	 * This model represents an attendee and their attendance status.
 	 */
 	camptix.models.Attendee = Backbone.Model.extend({
-		defaults: function() {
+		defaults: function () {
 			return {
 				id: null,
 				status: false,
@@ -20,51 +19,54 @@ jQuery(document).ready(function($){
 				avatar: '',
 				firstName: '',
 				lastName: '',
-				extras: []
-			}
+				extras: [],
+			};
 		},
 
 		/**
 		 * Set the attendance status and save on server.
 		 */
-		toggle: function( attended ) {
+		toggle: function (attended) {
 			this.save({ status: attended });
 		},
 
 		/**
 		 * Sync attendance status with the server.
 		 */
-		sync: function( method, model, options ) {
+		sync: function (method, model, options) {
 			var model = this;
-			model.trigger( 'camptix:sync:start' );
+			model.trigger('camptix:sync:start');
 
 			options = options || {};
 			options.context = this;
 			options.type = 'GET';
 
-			options.data = _.extend( options.data || {}, {
+			options.data = _.extend(options.data || {}, {
 				action: 'camptix-attendance',
-				camptix_secret: _camptixAttendanceSecret
+				camptix_secret: _camptixAttendanceSecret,
 			});
 
-			if ( method == 'read' ) {
-				options.data = _.extend( options.data || {}, {
+			if (method == 'read') {
+				options.data = _.extend(options.data || {}, {
 					camptix_action: 'sync-model',
-					camptix_id: this.id
+					camptix_id: this.id,
 				});
 
-				return wp.ajax.send( options ).done( function() { model.trigger( 'camptix:sync:end' ); } );
-
-			} else if ( method == 'update' ) {
-				options.data = _.extend( options.data || {}, {
+				return wp.ajax.send(options).done(function () {
+					model.trigger('camptix:sync:end');
+				});
+			} else if (method == 'update') {
+				options.data = _.extend(options.data || {}, {
 					camptix_action: 'sync-model',
-					camptix_set_attendance: this.get( 'status' ),
-					camptix_id: this.id
+					camptix_set_attendance: this.get('status'),
+					camptix_id: this.id,
 				});
 
-				return wp.ajax.send( options ).done( function() { model.trigger( 'camptix:sync:end' ) } );
+				return wp.ajax.send(options).done(function () {
+					model.trigger('camptix:sync:end');
+				});
 			}
-		}
+		},
 	});
 
 	/**
@@ -73,10 +75,9 @@ jQuery(document).ready(function($){
 	 * A collection to query and hold lists of attendees.
 	 */
 	camptix.collections.AttendeesList = Backbone.Collection.extend({
-
 		model: camptix.models.Attendee,
 
-		initialize: function( models, options ) {
+		initialize: function (models, options) {
 			this._hasMore = true;
 			this.query = options.query;
 			this.controller = options.controller;
@@ -85,57 +86,55 @@ jQuery(document).ready(function($){
 		/**
 		 * Talk to the server for more items.
 		 */
-		sync: function( method, model, options ) {
-			if ( method == 'read' ) {
+		sync: function (method, model, options) {
+			if (method == 'read') {
 				options = options || {};
 				options.context = this;
 				options.type = 'GET';
-				options.data = _.extend( options.data || {}, {
+				options.data = _.extend(options.data || {}, {
 					action: 'camptix-attendance',
 
 					camptix_action: 'sync-list',
-					camptix_paged: Math.floor( this.length / 50 ) + 1,
-					camptix_secret: _camptixAttendanceSecret
+					camptix_paged: Math.floor(this.length / 50) + 1,
+					camptix_secret: _camptixAttendanceSecret,
 				});
 
-				if ( this.query.search )
-					options.data.camptix_search = this.query.search;
+				if (this.query.search) options.data.camptix_search = this.query.search;
 
-				if ( this.query.filters )
-					options.data.camptix_filters = this.query.filters;
+				if (this.query.filters) options.data.camptix_filters = this.query.filters;
 
-				return wp.ajax.send( options );
+				return wp.ajax.send(options);
 			}
 		},
 
 		/**
 		 * Returns true if this collection (potentially) has more items.
 		 */
-		hasMore: function() {
+		hasMore: function () {
 			return this._hasMore;
 		},
 
 		/**
 		 * Get more items with this query.
 		 */
-		more: function( options ) {
+		more: function (options) {
 			var that = this;
 
-			if ( ! this.hasMore() ) {
-				return $.Deferred().resolveWith( this ).promise();
+			if (!this.hasMore()) {
+				return $.Deferred().resolveWith(this).promise();
 			}
 
-			if ( this._more && 'pending' === this._more.state() ) {
+			if (this._more && 'pending' === this._more.state()) {
 				return this._more;
 			}
 
-			return this._more = this.fetch({ remove: false }).done( function( resp ) {
-				if ( _.isEmpty( resp ) || resp.length < 50 ) {
+			return (this._more = this.fetch({ remove: false }).done(function (resp) {
+				if (_.isEmpty(resp) || resp.length < 50) {
 					that._hasMore = false;
-					this.controller.trigger( 'more:toggle', this._hasMore );
+					this.controller.trigger('more:toggle', this._hasMore);
 				}
-			});
-		}
+			}));
+		},
 	});
 
 	/**
@@ -147,55 +146,59 @@ jQuery(document).ready(function($){
 		tagName: 'li',
 		className: 'item',
 
-		template: wp.template( 'attendee' ),
+		template: wp.template('attendee'),
 
 		events: {
-			'fastClick': 'toggle'
+			fastClick: 'toggle',
 		},
 
-		initialize: function( options ) {
+		initialize: function (options) {
 			this.controller = options.controller;
 
-			this.listenTo( this.model, 'change', this.render );
-			this.listenTo( this.model, 'destroy', this.remove );
-			this.listenTo( this.model, 'camptix:sync:start', this.syncStart );
-			this.listenTo( this.model, 'camptix:sync:end', this.syncEnd );
+			this.listenTo(this.model, 'change', this.render);
+			this.listenTo(this.model, 'destroy', this.remove);
+			this.listenTo(this.model, 'camptix:sync:start', this.syncStart);
+			this.listenTo(this.model, 'camptix:sync:end', this.syncEnd);
 		},
 
 		/**
 		 * Render the attendee list item.
 		 */
-		render: function() {
-			var attendeeData = _.extend( this.model.toJSON(), { sort: this.controller.filterSettings.sort } );
-			this.$el.html( this.template( attendeeData ) );
+		render: function () {
+			var attendeeData = _.extend(this.model.toJSON(), {
+				sort: this.controller.filterSettings.sort,
+			});
+			this.$el.html(this.template(attendeeData));
 			return this;
 		},
 
 		/**
 		 * Show a spinner.
 		 */
-		syncStart: function() {
-			this.$el.addClass( 'camptix-loading' );
+		syncStart: function () {
+			this.$el.addClass('camptix-loading');
 		},
 
 		/**
 		 * Hide the spinner.
 		 */
-		syncEnd: function() {
-			this.$el.removeClass( 'camptix-loading' );
+		syncEnd: function () {
+			this.$el.removeClass('camptix-loading');
 		},
 
 		/**
 		 * Open the Attendee Toggle modal.
 		 */
-		toggle: function() {
+		toggle: function () {
 			// This touch was to stop a scroll.
-			if ( +new Date() - this.controller.lastScroll < 200 )
-				return;
+			if (+new Date() - this.controller.lastScroll < 200) return;
 
-			var toggleView = new camptix.views.AttendeeToggleView({ model: this.model, controller: this.controller });
-			$(document.body).append( toggleView.render().el );
-		}
+			var toggleView = new camptix.views.AttendeeToggleView({
+				model: this.model,
+				controller: this.controller,
+			});
+			$(document.body).append(toggleView.render().el);
+		},
 	});
 
 	/**
@@ -207,15 +210,15 @@ jQuery(document).ready(function($){
 	camptix.views.AttendeeToggleView = Backbone.View.extend({
 		className: 'attendee-toggle-wrap',
 
-		template: wp.template( 'attendee-toggle' ),
+		template: wp.template('attendee-toggle'),
 
 		events: {
 			'fastClick .yes': 'yes',
 			'fastClick .no': 'no',
-			'fastClick .close': 'close'
+			'fastClick .close': 'close',
 		},
 
-		initialize: function( options ) {
+		initialize: function (options) {
 			this.controller = options.controller;
 			this.$overlay = $('.overlay');
 		},
@@ -223,8 +226,8 @@ jQuery(document).ready(function($){
 		/**
 		 * Render modal.
 		 */
-		render: function() {
-			this.$el.html( this.template( this.model.toJSON() ) );
+		render: function () {
+			this.$el.html(this.template(this.model.toJSON()));
 			this.$overlay.show();
 			return this;
 		},
@@ -232,29 +235,29 @@ jQuery(document).ready(function($){
 		/**
 		 * Set to attending.
 		 */
-		yes: function() {
-			this.controller.trigger( 'flush' );
-			this.model.toggle( true );
+		yes: function () {
+			this.controller.trigger('flush');
+			this.model.toggle(true);
 			return this.close();
 		},
 
 		/**
 		 * Set to not attending.
 		 */
-		no: function() {
-			this.controller.trigger( 'flush' );
-			this.model.toggle( false );
+		no: function () {
+			this.controller.trigger('flush');
+			this.model.toggle(false);
 			return this.close();
 		},
 
 		/**
 		 * Close modal without changing any settings.
 		 */
-		close: function() {
+		close: function () {
 			this.$overlay.hide();
 			this.remove();
 			return false;
-		}
+		},
 	});
 
 	/**
@@ -264,22 +267,18 @@ jQuery(document).ready(function($){
 	 */
 	camptix.views.AttendeeSearchView = Backbone.View.extend({
 		className: 'attendee-search-view',
-		template: wp.template( 'attendee-search' ),
-
-		scanner: false,
+		template: wp.template('attendee-search'),
 
 		events: {
-			'input input':  'search',
-			'keyup input':  'search',
+			'input input': 'search',
+			'keyup input': 'search',
 			'change input': 'search',
 			'search input': 'search',
-			//'blur input': 'pauseQR',
-			'focus input': 'resumeQR',
-			'fastClick .close': 'close'
+			'fastClick .close': 'close',
 		},
 
-		initialize: function( options ) {
-			if ( options && options.controller ) {
+		initialize: function (options) {
+			if (options && options.controller) {
 				this.controller = options.controller;
 			}
 		},
@@ -287,81 +286,30 @@ jQuery(document).ready(function($){
 		/**
 		 * Render Search view.
 		 */
-		render: function() {
-			this.$el.html( this.template() );
-
-			this.startQR( this );
-
+		render: function () {
+			this.$el.html(this.template());
 			return this;
-		},
-
-		startQR: function( self ) {
-			// Abort if disabled or not loaded.
-			if ( ! _camptixAttendanceQRScanning || typeof QrScanner === 'undefined' ) {
-				return;
-			}
-
-			QrScanner.hasCamera().then( function() {
-				self.$el.find('.previews').append( '<video id="qr-preview" muted playsinline></video>' );
-
-				self.scanner = new QrScanner(
-					document.getElementById('qr-preview'),
-					function( scan ) {
-						return self.QRScanEvent( scan );
-					}
-				);
-
-				self.scanner.start();
-			});
-		},
-
-		stopQR: function() {
-			if ( this.scanner ) {
-				this.scanner.destroy();
-			}
-		},
-
-		pauseQR: function() {
-			if ( this.scanner ) {
-				this.scanner.pause();
-			}
-		},
-
-		resumeQR: function() {
-			if ( this.scanner ) {
-				this.scanner.start();
-			}
-		},
-
-		QRScanEvent: function( content ) {
-			var input = this.$el.find( 'input' );
-
-			if ( input.val() != content ) {
-				input.val( content );
-				this.controller.trigger( 'search', content, true );
-			}
 		},
 
 		/**
 		 * Ask the controller to perform a new search.
 		 */
-		search: function( event ) {
-			if ( event.keyCode == 13 ) {
-				this.$el.find( 'input' ).blur();
+		search: function (event) {
+			if (event.keyCode == 13) {
+				this.$el.find('input').blur();
 			}
 
 			var keyword = event.target.value || '';
-			this.controller.trigger( 'search', keyword );
+			this.controller.trigger('search', keyword);
 		},
 
 		/**
 		 * Close the view and reset search.
 		 */
-		close: function() {
-			this.controller.trigger( 'search', '' );
-			this.stopQR();
+		close: function () {
+			this.controller.trigger('search', '');
 			this.remove();
-		}
+		},
 	});
 
 	/**
@@ -371,16 +319,16 @@ jQuery(document).ready(function($){
 	 */
 	camptix.views.AttendeeFilterView = Backbone.View.extend({
 		className: 'attendee-filter-view',
-		template: wp.template( 'attendee-filter' ),
+		template: wp.template('attendee-filter'),
 
 		events: {
 			'fastClick .close': 'close',
 			'fastClick .filter-sort li': 'toggleSort',
 			'fastClick .filter-attendance li': 'toggleAttendance',
-			'fastClick .filter-tickets li': 'toggleTickets'
+			'fastClick .filter-tickets li': 'toggleTickets',
 		},
 
-		initialize: function( options ) {
+		initialize: function (options) {
 			this.controller = options.controller;
 			this.filterSettings = options.filterSettings || {};
 		},
@@ -388,63 +336,63 @@ jQuery(document).ready(function($){
 		/**
 		 * Render the filters menu.
 		 */
-		render: function() {
-			this.$el.html( this.template( this.filterSettings ) );
+		render: function () {
+			this.$el.html(this.template(this.filterSettings));
 			return this;
 		},
 
 		/**
 		 * Close the filter screen.
 		 */
-		close: function() {
+		close: function () {
 			this.remove();
 		},
 
 		/**
 		 * Toggle items in the attendance status list.
 		 */
-		toggleAttendance: function( event ) {
-			var selection = $( event.target ).data( 'attendance' );
+		toggleAttendance: function (event) {
+			var selection = $(event.target).data('attendance');
 			this.filterSettings.attendance = selection;
 			this.render();
 
-			this.controller.trigger( 'filter', this.filterSettings );
+			this.controller.trigger('filter', this.filterSettings);
 		},
 
 		/**
 		 * Toggle items in the tickets list.
 		 */
-		toggleTickets: function( event ) {
-			var ticket_id = $( event.target ).data( 'ticket-id' );
+		toggleTickets: function (event) {
+			var ticket_id = $(event.target).data('ticket-id');
 
 			// Remove or append the ticket_id to the filter settings.
-			if ( _.contains( this.filterSettings.tickets, ticket_id ) ) {
-				this.filterSettings.tickets = _.without( this.filterSettings.tickets, ticket_id );
+			if (_.contains(this.filterSettings.tickets, ticket_id)) {
+				this.filterSettings.tickets = _.without(this.filterSettings.tickets, ticket_id);
 			} else {
-				this.filterSettings.tickets.push( ticket_id );
+				this.filterSettings.tickets.push(ticket_id);
 			}
 
 			this.render();
-			this.controller.trigger( 'filter', this.filterSettings );
+			this.controller.trigger('filter', this.filterSettings);
 		},
 
 		/**
 		 * Toggle sort order for tickets list
 		 */
-		toggleSort: function( event ) {
-			var sortOrder = $( event.target ).data( 'sort' );
+		toggleSort: function (event) {
+			var sortOrder = $(event.target).data('sort');
 			this.filterSettings.sort = sortOrder;
 			this.render();
 
-			this.controller.trigger( 'filter', this.filterSettings );
-		}
+			this.controller.trigger('filter', this.filterSettings);
+		},
 	});
 
 	/**
 	 * Main Application View and controller.
 	 */
 	camptix.views.Application = Backbone.View.extend({
-		template: wp.template( 'application' ),
+		template: wp.template('application'),
 
 		/**
 		 * Main Application events/controls.
@@ -455,131 +403,117 @@ jQuery(document).ready(function($){
 			'fastClick header h1': 'searchView',
 			'fastClick .submenu .sort': 'sortView',
 			'fastClick .submenu .refresh': 'refresh',
-			'fastClick .submenu .filter': 'filterView'
+			'fastClick .submenu .qr': 'qr',
+			'fastClick .submenu .filter': 'filterView',
 		},
 
 		/**
 		 * Initialize the application.
 		 */
-		initialize: function() {
+		initialize: function () {
 			this.cache = [];
 			this.query = {};
 			this.requests = [];
 			this.lastScroll = 0;
-			this.show_single = false;
 
 			this.filterSettings = {
-				'attendance': 'none',
-				'tickets': _camptixAttendanceTickets,
-				'search': '',
-				'sort': 'firstName'
+				attendance: 'none',
+				tickets: _camptixAttendanceTickets,
+				search: '',
+				sort: 'firstName',
 			};
 
 			this.render();
 
-			this.$header = this.$el.find( 'header' );
-			this.$menu = this.$header.find( '.menu' );
+			this.$header = this.$el.find('header');
+			this.$qrscanner = this.$el.find('.qr-scanner');
+			this.$menu = this.$header.find('.menu');
 
-			this.scroll = _.chain( this.scroll ).bind( this ).value();
-			this.$list = this.$el.find( '.attendees-list' );
-			this.$list.on( 'scroll', this.scroll );
-			this.$loading = this.$list.find( '.loading' );
+			this.scroll = _.chain(this.scroll).bind(this).value();
+			this.$list = this.$el.find('.attendees-list');
+			this.$list.on('scroll', this.scroll);
+			this.$loading = this.$list.find('.loading');
 
-			this.on( 'search', _.debounce( this.search, 350 ), this );
-			this.on( 'flush', this.flush, this );
-			this.on( 'more:toggle', this.moreToggle, this );
-			this.on( 'filter', this.filter, this );
+			this.on('search', _.debounce(this.search, 350), this);
+			this.on('flush', this.flush, this);
+			this.on('more:toggle', this.moreToggle, this);
+			this.on('filter', this.filter, this);
 
 			this.setupCollection();
+
+			if (_camptixAttendanceQRScanning !== undefined && _camptixAttendanceQRScanning) {
+				this.qr();
+			}
+
+			//this.$menu.find('.qr').trigger('click');
 		},
 
 		/**
 		 * Runs when hasMore is toggled in the current collection.
 		 */
-		moreToggle: function( hasMore ) {
-			this.$loading.toggle( hasMore );
+		moreToggle: function (hasMore) {
+			this.$loading.toggle(hasMore);
 		},
 
 		/**
 		 * Setup a collection (or retrieve one from cache)
 		 */
-		setupCollection: function( query ) {
+		setupCollection: function (query) {
 			var collection,
 				options = {};
 
 			// Dispose of the current collection and cache it for later use.
-			if ( 'undefined' !== typeof this.collection ) {
-				this.collection.off( null, null, this );
-				this.cache.push( this.collection );
+			if ('undefined' !== typeof this.collection) {
+				this.collection.off(null, null, this);
+				this.cache.push(this.collection);
 			}
 
-			query = _.defaults( query || {}, {
+			query = _.defaults(query || {}, {
 				search: '',
-				filters: _.clone( this.filterSettings )
+				filters: _.clone(this.filterSettings),
 			});
 
 			options.query = query;
 			options.controller = this;
 
-			collection = _.find( this.cache, function( collection ) {
-				return _.isEqual( collection.query, options.query );
-			} );
+			collection = _.find(this.cache, function (collection) {
+				return _.isEqual(collection.query, options.query);
+			});
 
-			if ( ! collection ) {
-				collection = new camptix.collections.AttendeesList( [], options );
+			if (!collection) {
+				collection = new camptix.collections.AttendeesList([], options);
 			}
 
 			this.query = query;
 			this.collection = collection;
-			this.collection.on( 'add', this.add, this );
-			this.collection.on( 'reset', this.reset, this );
-			this.collection.on( 'sync', this.show_single_result, this );
-			this.collection.on( 'reset', this.show_single_result, this );
+			this.collection.on('add', this.add, this);
+			this.collection.on('reset', this.reset, this);
 
 			// Clear the list before adding things back.
-			this.$list.find( 'li.item' ).remove();
+			this.$list.find('li.item').remove();
 
-			if ( this.collection.length ) {
-				this.collection.trigger( 'reset' );
+			if (this.collection.length) {
+				this.collection.trigger('reset');
 			} else {
-				this.collection.more().done( this.scroll );
+				this.collection.more().done(this.scroll);
 			}
 
-			this.trigger( 'more:toggle', collection.hasMore() );
-		},
-
-		show_single_result: function( self, collection ) {
-			if ( ! this.show_single ) {
-				return;
-			}
-			// Reset, we don't want this triggering again on this search.
-			this.show_single = false;
-
-			var lies = this.$list.find('li.item');
-
-			if ( lies.length == 1 ) {
-				// Pull up the single attendee that was found.
-				lies.get(0).click();
-
-				// Defocus the search bar if still selected to stop QR scanning and hide keyboard.
-				this.$header.find( 'input:focus' ).blur();
-			}
+			this.trigger('more:toggle', collection.hasMore());
 		},
 
 		/**
 		 * Scroll event handler.
 		 */
-		scroll: function() {
+		scroll: function () {
 			var view = this,
 				el = this.$list[0];
 
 			this.lastScroll = +new Date();
 
-			if ( ! this.collection.hasMore() )
-				return;
+			if (!this.collection.hasMore()) return;
 
-			if ( el.scrollHeight < el.scrollTop + ( el.clientHeight * 3 ) ) {
-				this.collection.more().done(function() {
+			if (el.scrollHeight < el.scrollTop + el.clientHeight * 3) {
+				this.collection.more().done(function () {
 					view.scroll();
 				});
 			}
@@ -588,41 +522,46 @@ jQuery(document).ready(function($){
 		/**
 		 * Render the application view.
 		 */
-		render: function() {
-			this.$el.html( this.template() );
-			$(document.body).append( this.el );
+		render: function () {
+			this.$el.html(this.template());
+			$(document.body).append(this.el);
 			return this;
 		},
 
 		/**
 		 * Append a single AttendeeView item (from a model) to the list.
 		 */
-		add: function( item ) {
-			var view = new camptix.views.AttendeeView({ model: item, controller: this });
-			this.$loading.before( view.render().el );
+		add: function (item) {
+			var view = new camptix.views.AttendeeView({
+				model: item,
+				controller: this,
+			});
+			this.$loading.before(view.render().el);
 		},
 
 		/**
 		 * A collection is reset. Make sure everything is added back to the view.
 		 */
-		reset: function() {
-			this.collection.each( this.add, this );
+		reset: function () {
+			this.collection.each(this.add, this);
 		},
 
 		/**
 		 * Toggle nav menu.
 		 */
-		menu: function( event ) {
-			this.$menu.toggleClass( 'dropdown' );
+		menu: function (event) {
+			this.$menu.toggleClass('dropdown');
 		},
 
 		/**
 		 * Show the Search view.
 		 */
-		searchView: function() {
-			this.$menu.removeClass( 'dropdown' );
-			this.searchView = new camptix.views.AttendeeSearchView({ controller: this });
-			this.$header.append( this.searchView.render().el );
+		searchView: function () {
+			this.$menu.removeClass('dropdown');
+			this.searchView = new camptix.views.AttendeeSearchView({
+				controller: this,
+			});
+			this.$header.append(this.searchView.render().el);
 
 			this.searchView.$el.find('input').focus();
 			return false;
@@ -631,10 +570,13 @@ jQuery(document).ready(function($){
 		/**
 		 * Show the Filter Settings view.
 		 */
-		filterView: function() {
-			this.$menu.removeClass( 'dropdown' );
-			this.filterView = new camptix.views.AttendeeFilterView({ controller: this, filterSettings: this.filterSettings });
-			this.$el.append( this.filterView.render().el );
+		filterView: function () {
+			this.$menu.removeClass('dropdown');
+			this.filterView = new camptix.views.AttendeeFilterView({
+				controller: this,
+				filterSettings: this.filterSettings,
+			});
+			this.$el.append(this.filterView.render().el);
 			return false;
 		},
 
@@ -642,22 +584,96 @@ jQuery(document).ready(function($){
 		 * Remove everything from the list, flush all caches
 		 * and setup a new collection with the current settings.
 		 */
-		refresh: function() {
-			this.$menu.removeClass( 'dropdown' );
+		refresh: function () {
+			this.$menu.removeClass('dropdown');
 			delete this.collection;
 			this.flush();
 			this.setupCollection();
 			return false;
 		},
 
+		qr: function () {
+			this.$el.toggleClass('qr-scanner-active');
+			this.$menu.removeClass('dropdown');
+
+			var that = this;
+
+			let html5QrcodeScanner;
+			let lastScan;
+			let toggleView;
+
+			//load https://unpkg.com/html5-qrcode
+
+			var script = document.createElement('script');
+			script.src = 'https://unpkg.com/html5-qrcode';
+			script.type = 'text/javascript';
+
+			function onScanSuccess(decodedText, decodedResult) {
+				if (lastScan === decodedText) {
+					return;
+				}
+
+				lastScan = decodedText;
+
+				if (toggleView) toggleView.close();
+				let method = 'read';
+				let model = that.collection;
+				let options = {
+					data: { qrcode: decodedText },
+				};
+
+				that.collection
+					.sync(method, model, options)
+					.done(
+						function (res) {
+							// not sure why this is an array
+							let attendeeModel = new camptix.models.Attendee(res[0]);
+							toggleView = new camptix.views.AttendeeToggleView({
+								model: attendeeModel,
+								controller: that,
+							});
+							$(document.body).append(toggleView.render().el);
+						}.bind(that)
+					)
+					.fail(function (res) {
+						console.log('fail', res);
+					})
+					.always(() => {
+						setTimeout(() => {
+							html5QrcodeScanner.resume();
+							that.refresh();
+						}, 3000);
+					});
+
+				html5QrcodeScanner.pause();
+			}
+
+			let c = document.getElementById('qr-reader').getBoundingClientRect();
+
+			let qrbox = {
+				width: c.width * 0.7,
+				height: c.width * 0.7,
+			};
+			console.log(c, qrbox);
+
+			html5QrcodeScanner = new Html5QrcodeScanner('qr-reader', { fps: 1, qrbox: qrbox }, false);
+			html5QrcodeScanner.render(onScanSuccess);
+
+			// this.$qrscanner.toggle();
+			// delete this.collection;
+			// this.flush();
+			// this.setupCollection();
+
+			// console.log(this);
+			return false;
+		},
+
 		/**
 		 * Re-initialize a calloction with a search term.
 		 */
-		search: function( keyword, show_single ) {
-			this.show_single = !! show_single;
+		search: function (keyword) {
 			this.keyword = this.keyword || '';
-			if ( keyword == this.keyword )
-				return;
+			if (keyword == this.keyword) return;
 
 			this.keyword = keyword;
 			this.setupCollection({ search: this.keyword });
@@ -666,7 +682,7 @@ jQuery(document).ready(function($){
 		/**
 		 * Re-initialize a collection with (possibly) new filter settings.
 		 */
-		filter: function( settings ) {
+		filter: function (settings) {
 			this.filterSettings = settings;
 			delete this.collection;
 			this.flush();
@@ -676,9 +692,9 @@ jQuery(document).ready(function($){
 		/**
 		 * Remove all queries from cache.
 		 */
-		flush: function() {
+		flush: function () {
 			this.cache = [];
-		}
+		},
 	});
 
 	// Initialize application.
