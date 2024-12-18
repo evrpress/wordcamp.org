@@ -273,7 +273,7 @@ jQuery(document).ready(function($){
 			'keyup input':  'search',
 			'change input': 'search',
 			'search input': 'search',
-			'blur input': 'pauseQR',
+			//'blur input': 'pauseQR',
 			'focus input': 'resumeQR',
 			'fastClick .close': 'close'
 		},
