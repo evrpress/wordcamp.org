@@ -175,6 +175,16 @@ li.item .spinner:after {
   display: block;
   margin-right: 50px;
   margin-left: 50px; }
+  .attendee-search-view .wrapper .previews {
+    position: fixed;
+    bottom: 1em;
+    left: 1em;
+    right: 1em; }
+  .attendee-search-view .wrapper .previews video {
+    max-height: 8em;
+    max-width: 8em;
+    width: 8em;
+    float: right; }
 
 .attendee-search-view input {
   border: 0;

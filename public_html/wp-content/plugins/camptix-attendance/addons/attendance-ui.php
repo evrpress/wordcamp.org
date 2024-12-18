@@ -24,6 +24,7 @@ $camptix_options = $camptix->get_options();
 	<script>
 		_camptixAttendanceSecret = '<?php echo esc_js( $_GET['camptix-attendance'] ); ?>';
 		_camptixAttendanceTickets = [ <?php echo esc_js( implode( ', ', array_map( 'absint', wp_list_pluck( $camptix_tickets, 'ID' ) ) ) ); ?> ];
+		_camptixAttendanceQRScanning = <?php echo ! empty( $camptix_options['attendance-qr-enabled'] ) ? 'true' : 'false'; ?>;
 	</script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
@@ -95,6 +96,7 @@ $camptix_options = $camptix->get_options();
 		<a href="#" class="close dashicons dashicons-no"></a>
 		<div class="wrapper">
 			<input type="text" autocomplete="off" placeholder="Search" />
+			<div class="previews"></div>
 		</div>
 	</script>
 

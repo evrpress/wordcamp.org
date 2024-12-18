@@ -266,11 +266,15 @@ jQuery(document).ready(function($){
 		className: 'attendee-search-view',
 		template: wp.template( 'attendee-search' ),
 
+		scanner: false,
+
 		events: {
 			'input input':  'search',
 			'keyup input':  'search',
 			'change input': 'search',
 			'search input': 'search',
+			'blur input': 'pauseQR',
+			'focus input': 'resumeQR',
 			'fastClick .close': 'close'
 		},
 
@@ -285,7 +289,57 @@ jQuery(document).ready(function($){
 		 */
 		render: function() {
 			this.$el.html( this.template() );
+
+			this.startQR( this );
+
 			return this;
+		},
+
+		startQR: function( self ) {
+			// Abort if disabled or not loaded.
+			if ( ! _camptixAttendanceQRScanning || typeof QrScanner === 'undefined' ) {
+				return;
+			}
+
+			QrScanner.hasCamera().then( function() {
+				self.$el.find('.previews').append( '<video id="qr-preview" muted playsinline></video>' );
+
+				self.scanner = new QrScanner(
+					document.getElementById('qr-preview'),
+					function( scan ) {
+						return self.QRScanEvent( scan );
+					}
+				);
+
+				self.scanner.start();
+			});
+		},
+
+		stopQR: function() {
+			if ( this.scanner ) {
+				this.scanner.destroy();
+			}
+		},
+
+		pauseQR: function() {
+			if ( this.scanner ) {
+				this.scanner.pause();
+			}
+		},
+
+		resumeQR: function() {
+			if ( this.scanner ) {
+				this.scanner.start();
+			}
+		},
+
+		QRScanEvent: function( content ) {
+			var input = this.$el.find( 'input' );
+
+			if ( input.val() != content ) {
+				input.val( content );
+				this.controller.trigger( 'search', content, true );
+			}
 		},
 
 		/**
@@ -305,6 +359,7 @@ jQuery(document).ready(function($){
 		 */
 		close: function() {
 			this.controller.trigger( 'search', '' );
+			this.stopQR();
 			this.remove();
 		}
 	});
@@ -411,6 +466,7 @@ jQuery(document).ready(function($){
 			this.query = {};
 			this.requests = [];
 			this.lastScroll = 0;
+			this.show_single = false;
 
 			this.filterSettings = {
 				'attendance': 'none',
@@ -477,6 +533,8 @@ jQuery(document).ready(function($){
 			this.collection = collection;
 			this.collection.on( 'add', this.add, this );
 			this.collection.on( 'reset', this.reset, this );
+			this.collection.on( 'sync', this.show_single_result, this );
+			this.collection.on( 'reset', this.show_single_result, this );
 
 			// Clear the list before adding things back.
 			this.$list.find( 'li.item' ).remove();
@@ -488,6 +546,24 @@ jQuery(document).ready(function($){
 			}
 
 			this.trigger( 'more:toggle', collection.hasMore() );
+		},
+
+		show_single_result: function( self, collection ) {
+			if ( ! this.show_single ) {
+				return;
+			}
+			// Reset, we don't want this triggering again on this search.
+			this.show_single = false;
+
+			var lies = this.$list.find('li.item');
+
+			if ( lies.length == 1 ) {
+				// Pull up the single attendee that was found.
+				lies.get(0).click();
+
+				// Defocus the search bar if still selected to stop QR scanning and hide keyboard.
+				this.$header.find( 'input:focus' ).blur();
+			}
 		},
 
 		/**
@@ -577,7 +653,8 @@ jQuery(document).ready(function($){
 		/**
 		 * Re-initialize a calloction with a search term.
 		 */
-		search: function( keyword ) {
+		search: function( keyword, show_single ) {
+			this.show_single = !! show_single;
 			this.keyword = this.keyword || '';
 			if ( keyword == this.keyword )
 				return;
