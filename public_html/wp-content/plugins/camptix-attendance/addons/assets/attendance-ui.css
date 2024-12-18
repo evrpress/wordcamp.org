@@ -181,9 +181,8 @@ li.item .spinner:after {
     left: 1em;
     right: 1em; }
   .attendee-search-view .wrapper .previews video {
-    max-height: 8em;
-    max-width: 8em;
-    width: 8em;
+    width: 100%;
+    max-width: 400px;
     float: right; }
 
 .attendee-search-view input {
