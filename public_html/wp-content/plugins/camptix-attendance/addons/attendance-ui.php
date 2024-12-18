@@ -77,6 +77,7 @@ $camptix_options = $camptix->get_options();
 					<a href="#" class="search">Search</a>
 					<a href="#" class="filter">Sort & Filter</a>
 					<a href="#" class="refresh">Refresh</a>
+					<a href="#" class="qr">QR Scanner</a>
 				</div>
 			</div>
 			<h1><?php echo esc_html( $camptix_options['event_name'] ); ?></h1>
@@ -89,6 +90,7 @@ $camptix_options = $camptix->get_options();
 					<span>Loading...</span>
 				</li>
 			</ul>
+			<div class="qr-scanner"><div id="qr-reader" width="600px"></div></div>
 		</div>
 	</script>
 
